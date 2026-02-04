@@ -5,10 +5,13 @@ $user = "avnadmin";
 $pass = "AVNS_3LAEpH1RXymVMM2inLf";
 $dbname = "defaultdb";
 
-// Connect to Aiven with SSL required
+// Initialize mysqli with SSL
 $conn = mysqli_init();
+
+// Aiven uses a self-signed CA. We skip verification but force encryption.
 mysqli_ssl_set($conn, NULL, NULL, NULL, NULL, NULL);
+
 if (!mysqli_real_connect($conn, $host, $user, $pass, $dbname, $port, NULL, MYSQLI_CLIENT_SSL)) {
-    die("Connect Error: " . mysqli_connect_error());
+    die("Database Connection Failed: " . mysqli_connect_error());
 }
 ?>
