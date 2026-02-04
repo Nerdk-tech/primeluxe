@@ -41,20 +41,31 @@ $current_balance = $user['balance'] ?? "400.00";
         </div>
         
         <h6 class="mt-4 fw-bold">AVAILABLE INVESTMENTS</h6>
-        <div class="row g-3">
-            <div class="col-6">
-                <div class="card vip-card p-3 text-center">
-                    <span class="badge bg-dark mb-2 py-2">VIP 1</span>
-                    <h6 class="fw-bold m-0">₦3,000</h6>
-                    <small class="text-muted">ROI: 110% / 7 Days</small>
-                    <form action="api/invest.php" method="POST">
-                        <input type="hidden" name="amount" value="3000">
-                        <input type="hidden" name="vip_level" value="1">
-                        <button type="submit" name="invest" class="btn btn-luxe btn-sm mt-3 w-100">JOIN PLAN</button>
-                    </form>
-                </div>
-            </div>
-            </div>
+<div class="row g-3">
+    <?php
+    // Define the plans based on Ella's rules
+    $plans = [
+        ['level' => 1, 'price' => 3000, 'range' => '3k - 20k'],
+        ['level' => 2, 'price' => 23000, 'range' => '23k - 50k'],
+        ['level' => 3, 'price' => 53000, 'range' => '53k - 80k'],
+        ['level' => 4, 'price' => 83000, 'range' => '83k - 110k'],
+        ['level' => 5, 'price' => 113000, 'range' => '113k - 150k']
+    ];
+
+    foreach ($plans as $plan): ?>
+    <div class="col-6">
+        <div class="card vip-card p-3 text-center border-gold">
+            <span class="badge bg-dark mb-2 py-2">VIP <?php echo $plan['level']; ?></span>
+            <h6 class="fw-bold m-0">₦<?php echo number_format($plan['price']); ?></h6>
+            <small class="text-muted"><?php echo $plan['range']; ?></small>
+            <br>
+            <small class="text-success fw-bold">ROI: 2.1x / 7 Days</small>
+            <form action="api/invest.php" method="POST">
+                <input type="hidden" name="amount" value="<?php echo $plan['price']; ?>">
+                <input type="hidden" name="vip_level" value="<?php echo $plan['level']; ?>">
+                <button type="submit" name="invest" class="btn btn-luxe btn-sm mt-3 w-100">JOIN PLAN</button>
+            </form>
+        </div>
     </div>
-</body>
-</html>
+    <?php endforeach; ?>
+</div>
