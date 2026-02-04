@@ -1,36 +1,37 @@
 <?php
 include 'db.php';
-session_start(); // Essential to keep the user logged in
+session_start();
 
-// Registration Logic
 if(isset($_POST['register'])){
-    $phone = $_POST['phone'];
+    $username = mysqli_real_escape_string($conn, $_POST['username']);
+    $phone = mysqli_real_escape_string($conn, $_POST['phone']);
     $password = password_hash($_POST['password'], PASSWORD_DEFAULT);
-    $bonus = 400.00;
     
-    $sql = "INSERT INTO users (phone, password, balance) VALUES ('$phone', '$password', '$bonus')";
+    // Check if referral code exists in URL (optional)
+    $ref = isset($_GET['ref']) ? $_GET['ref'] : NULL;
+    
+    $sql = "INSERT INTO users (username, phone, password, referred_by, balance) 
+            VALUES ('$username', '$phone', '$password', '$ref', 400.00)";
     
     if(mysqli_query($conn, $sql)){
-        $_SESSION['user_id'] = mysqli_insert_id($conn); // Get the ID of the new user
-        header("Location: ../dashboard.php?success=Welcome!");
+        $_SESSION['user_id'] = mysqli_insert_id($conn);
+        header("Location: ../dashboard.php");
     } else {
-        header("Location: ../index.php?error=Phone number already exists");
+        header("Location: ../index.php?error=Username or Phone already exists");
     }
 }
 
-// Login Logic (Add this so the login form actually works)
 if(isset($_POST['login'])){
     $phone = $_POST['phone'];
     $password = $_POST['password'];
-    
     $result = mysqli_query($conn, "SELECT * FROM users WHERE phone = '$phone'");
     $user = mysqli_fetch_assoc($result);
     
     if($user && password_verify($password, $user['password'])){
-        $_SESSION['user_id'] = $user['id']; // Save user ID to session
+        $_SESSION['user_id'] = $user['id'];
         header("Location: ../dashboard.php");
     } else {
-        header("Location: ../index.php?error=Invalid phone or password");
+        header("Location: ../index.php?error=Invalid credentials");
     }
 }
 ?>
