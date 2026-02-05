@@ -17,24 +17,18 @@ if($user['balance'] < $cost) {
     exit();
 }
 
-$check = mysqli_query($conn, "SELECT id FROM investments WHERE user_id = '$uid' AND status = 'active'");
-if(mysqli_num_rows($check) > 0) {
-    header("Location: ../dashboard.php?error=Already have an active plan");
-    exit();
-}
-
+// Deduct balance
 mysqli_query($conn, "UPDATE users SET balance = balance - $cost WHERE id = '$uid'");
 
-// FIXED: Ensure these column names match your DB. 
-// If you run the SQL fix below, this will work perfectly.
+// Start Investment with all required columns
 $sql = "INSERT INTO investments (user_id, vip_level, amount_invested, current_step, status) 
         VALUES ('$uid', '$vip_id', '$cost', 0, 'active')";
 
 if(mysqli_query($conn, $sql)) {
-    header("Location: ../dashboard.php?success=Investment activated!");
+    header("Location: ../orders.php?success=Investment Started");
 } else {
-    // If it fails, give the money back
+    // Refund if DB fails
     mysqli_query($conn, "UPDATE users SET balance = balance + $cost WHERE id = '$uid'");
-    header("Location: ../dashboard.php?error=Database Error");
+    echo "DB Error: " . mysqli_error($conn);
 }
 ?>
