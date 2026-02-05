@@ -13,61 +13,73 @@ $u = mysqli_fetch_assoc(mysqli_query($conn, "SELECT * FROM users WHERE id = '".$
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard | Prime Luxe</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
         :root { --navy: #001f3f; --gold: #D4AF37; }
-        body { background: #f8f9fa; padding-bottom: 90px; }
-        .top-balance { background: var(--navy); color: white; padding: 30px 20px; border-bottom: 4px solid var(--gold); border-radius: 0 0 30px 30px; }
-        .action-icon { text-align: center; text-decoration: none; color: #333; font-size: 11px; font-weight: bold; width: 22%; }
-        .action-icon img { width: 40px; margin-bottom: 5px; display: block; margin-left: auto; margin-right: auto; }
-        .vip-row { background: white; border-radius: 15px; margin-bottom: 15px; border: 1px solid #ddd; overflow: hidden; }
-        .vip-header { background: var(--navy); color: var(--gold); padding: 10px 15px; font-weight: bold; display: flex; justify-content: space-between; }
-        .step-box { font-size: 11px; color: #666; background: #fff9e6; padding: 10px; border-radius: 5px; }
-        .nav-active { color: var(--navy) !important; font-weight: bold; }
+        body { background: #f8f9fa; padding-bottom: 100px; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        .top-balance { background: var(--navy); color: white; padding: 35px 20px; border-bottom: 5px solid var(--gold); border-radius: 0 0 35px 35px; }
+        
+        /* Main Action Grid */
+        .action-card { background: white; border-radius: 20px; padding: 20px 10px; margin-top: -30px; }
+        .action-icon { text-align: center; text-decoration: none; color: #333; font-size: 11px; font-weight: 700; width: 23%; }
+        .action-icon img { width: 42px; margin-bottom: 8px; transition: 0.3s; }
+        .action-icon:active img { transform: scale(0.9); }
+
+        .vip-row { background: white; border-radius: 18px; margin-bottom: 18px; border: 1px solid #eee; overflow: hidden; }
+        .vip-header { background: var(--navy); color: var(--gold); padding: 12px 18px; font-weight: bold; display: flex; justify-content: space-between; align-items: center; }
+        .step-box { font-size: 11px; color: #555; background: #fffcf0; padding: 12px; border-radius: 8px; border-left: 3px solid var(--gold); }
+        
+        /* Navigation */
+        .bottom-nav { background: white; border-top: 1px solid #eee; height: 70px; }
+        .nav-item { text-decoration: none; color: #bbb; font-size: 11px; font-weight: 600; text-align: center; }
+        .nav-item.active { color: var(--navy); }
+        .nav-item img { width: 24px; display: block; margin: 0 auto 3px; }
     </style>
 </head>
 <body>
 
-    <div class="top-balance text-center shadow">
-        <small class="opacity-75">Available Balance</small>
-        <h2 class="fw-bold mb-1">₦<?php echo number_format($u['balance'], 2); ?></h2>
-        <div class="d-flex justify-content-center gap-2 mt-3">
-            <a href="deposit.php" class="btn btn-warning fw-bold px-4 shadow-sm">RECHARGE</a>
-            <a href="withdraw.php" class="btn btn-outline-light fw-bold px-4 shadow-sm">WITHDRAW</a>
+    <div class="top-balance text-center shadow-lg">
+        <p class="small opacity-75 mb-1">Current Balance</p>
+        <h1 class="fw-bold mb-3">₦<?php echo number_format($u['balance'], 2); ?></h1>
+        <div class="d-flex justify-content-center gap-3">
+            <a href="deposit.php" class="btn btn-warning fw-bold px-4 rounded-pill shadow">RECHARGE</a>
+            <a href="withdraw.php" class="btn btn-outline-light fw-bold px-4 rounded-pill">WITHDRAW</a>
         </div>
     </div>
 
-    <div class="container mt-4">
-        <div class="alert alert-info py-2 d-flex align-items-center justify-content-between shadow-sm border-0" style="border-radius: 12px;">
-            <span class="small fw-bold">📢 Official Community:</span>
-            <a href="https://chat.whatsapp.com/LLGhNA8L0HfDNmU34S8CDt?mode=gi_t" class="btn btn-success btn-sm fw-bold rounded-pill">Join Group</a>
-        </div>
-
-        <div class="d-flex justify-content-between my-4 bg-white p-3 shadow-sm rounded-4">
+    <div class="container mt-2">
+        <div class="action-card shadow-sm d-flex justify-content-between mb-4">
+            <a href="deposit.php" class="action-icon">
+                <img src="https://img.icons8.com/color/96/bank-cards.png"><br>Deposit
+            </a>
             <a href="team.php" class="action-icon">
-                <img src="https://img.icons8.com/color/96/group.png"> Team
+                <img src="https://img.icons8.com/color/96/conference-call.png"><br>Team
             </a>
             <a href="withdraw_history.php" class="action-icon">
-                <img src="https://img.icons8.com/color/96/withdrawal.png"> Cashout
-            </a>
-            <a href="withdraw_history.php" class="action-icon">
-                <img src="https://img.icons8.com/color/96/activity-history.png"> History
+                <img src="https://img.icons8.com/color/96/list.png"><br>Logs
             </a>
             <a href="https://wa.me/2348077502802" class="action-icon">
-                <img src="https://img.icons8.com/color/96/whatsapp.png"> Support
+                <img src="https://img.icons8.com/color/96/whatsapp.png"><br>Support
             </a>
         </div>
 
-        <h6 class="fw-bold text-muted mb-3">VIP INVESTMENT PLANS</h6>
+        <div class="alert alert-warning py-2 px-3 d-flex align-items-center justify-content-between shadow-sm border-0 mb-4" style="border-radius: 12px;">
+            <div class="small fw-bold text-dark">📢 Join Our Community</div>
+            <a href="https://chat.whatsapp.com/LLGhNA8L0HfDNmU34S8CDt?mode=gi_t" class="btn btn-success btn-sm fw-bold rounded-pill px-3">JOIN NOW</a>
+        </div>
+
+        <h6 class="fw-bold text-muted mb-3 px-1">AVAILABLE PACKAGES</h6>
 
         <?php
         $plans = [
             1 => ['name' => 'VIP 1', 'price' => 3000, 'steps' => '3k ➔ 7.2k ➔ 11.5k ➔ 15.7k ➔ 20k'],
             2 => ['name' => 'VIP 2', 'price' => 23000, 'steps' => '23k ➔ 29.7k ➔ 36.5k ➔ 43.2k ➔ 50k'],
-            3 => ['name' => 'VIP 3', 'price' => 53000, 'steps' => '53k ➔ 80k total growth'],
-            4 => ['name' => 'VIP 4', 'price' => 83000, 'steps' => '83k ➔ 110k total growth'],
-            5 => ['name' => 'VIP 5', 'price' => 113000, 'steps' => '113k ➔ 150k total growth']
+            3 => ['name' => 'VIP 3', 'price' => 53000, 'steps' => '53k ➔ 80k Profit Goal'],
+            4 => ['name' => 'VIP 4', 'price' => 83000, 'steps' => '83k ➔ 110k Profit Goal'],
+            5 => ['name' => 'VIP 5', 'price' => 113000, 'steps' => '113k ➔ 150k Profit Goal']
         ];
 
         foreach($plans as $id => $p): ?>
@@ -77,25 +89,28 @@ $u = mysqli_fetch_assoc(mysqli_query($conn, "SELECT * FROM users WHERE id = '".$
                 <span>₦<?php echo number_format($p['price']); ?></span>
             </div>
             <div class="p-3">
-                <div class="step-box mb-3"><strong>Growth Path:</strong> <?php echo $p['steps']; ?></div>
+                <div class="step-box mb-3"><strong>Growth:</strong> <?php echo $p['steps']; ?></div>
                 <form action="api/buy_vip.php" method="POST">
                     <input type="hidden" name="vip_id" value="<?php echo $id; ?>">
-                    <button type="submit" class="btn btn-warning w-100 fw-bold rounded-pill py-2">INVEST NOW</button>
+                    <button type="submit" class="btn btn-warning w-100 fw-bold rounded-pill py-2 shadow-sm">INVEST NOW</button>
                 </form>
             </div>
         </div>
         <?php endforeach; ?>
     </div>
 
-    <div class="fixed-bottom bg-white border-top d-flex justify-content-around py-2 shadow-lg">
-        <a href="dashboard.php" class="text-center text-decoration-none nav-active small">
-            <img src="https://img.icons8.com/material-rounded/24/001f3f/home.png"><br>Home
+    <div class="fixed-bottom bottom-nav d-flex justify-content-around align-items-center shadow-lg">
+        <a href="dashboard.php" class="nav-item active">
+            <img src="https://img.icons8.com/material-rounded/24/001f3f/home.png">Home
         </a>
-        <a href="team.php" class="text-center text-decoration-none text-muted small">
-            <img src="https://img.icons8.com/material-outlined/24/cccccc/conference-call.png"><br>Team
+        <a href="team.php" class="nav-item">
+            <img src="https://img.icons8.com/material-outlined/24/cccccc/conference-call.png">Team
         </a>
-        <a href="withdraw_history.php" class="text-center text-decoration-none text-muted small">
-            <img src="https://img.icons8.com/material-outlined/24/cccccc/clock.png"><br>Logs
+        <a href="withdraw_history.php" class="nav-item">
+            <img src="https://img.icons8.com/material-outlined/24/cccccc/clock.png">Logs
+        </a>
+        <a href="settings.php" class="nav-item">
+            <img src="https://img.icons8.com/material-outlined/24/cccccc/user-male-circle.png">Mine
         </a>
     </div>
 
