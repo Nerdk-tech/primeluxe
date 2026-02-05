@@ -14,11 +14,15 @@ $tables = [
 
 foreach($tables as $t) { mysqli_query($conn, $t); }
 
-// 2. SMART COLUMN PATCHER
+// 2. SMART COLUMN PATCHER (Fixed Syntax)
 function addColumnSimple($conn, $table, $column, $definition) {
     $check = mysqli_query($conn, "SHOW COLUMNS FROM `$table` LIKE '$column'");
     if (mysqli_num_rows($check) == 0) {
-        mysqli_query($conn, "ALTER TABLE `$table` ADD COLUMN `$column` $definition");
+        // FIXED: Using single quotes for the SQL query string
+        $sql = "ALTER TABLE `$table` ADD COLUMN `$column` $definition";
+        if(!mysqli_query($conn, $sql)) {
+            echo "<p style='color:red;'>Error adding $column: " . mysqli_error($conn) . "</p>";
+        }
     }
 }
 
@@ -28,15 +32,14 @@ function addColumnSimple($conn, $table, $column, $definition) {
 addColumnSimple($conn, 'users', 'username', 'VARCHAR(50)');
 addColumnSimple($conn, 'users', 'referred_by', 'INT DEFAULT NULL');
 
-// Fix Deposits (IMPORTANT: For Ella's anti-scam verification)
-addColumnSimple($conn, 'deposits', 'sender_name', 'VARCHAR(255) DEFAULT "Not Provided"');
+// Fix Deposits (FIXED SYNTAX: Using single quotes for the default value)
+addColumnSimple($conn, 'deposits', 'sender_name', "VARCHAR(255) DEFAULT 'Not Provided'");
 
 // Fix Investments
 addColumnSimple($conn, 'investments', 'current_step', 'INT DEFAULT 0');
 addColumnSimple($conn, 'investments', 'last_growth', 'TIMESTAMP DEFAULT CURRENT_TIMESTAMP');
 
 echo "<p style='color:green;'>✅ Database structure successfully synchronized!</p>";
-echo "<p style='font-size:12px; color:#666;'>Columns checked: username, referred_by, sender_name, current_step, last_growth.</p>";
 echo "<hr>";
 echo "<a href='dashboard.php' style='display:inline-block; padding:12px 25px; background:#001f3f; color:#D4AF37; text-decoration:none; font-weight:bold; border-radius:5px;'>GO TO DASHBOARD</a>";
 echo "</div>";
