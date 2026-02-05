@@ -33,7 +33,7 @@ $u = mysqli_fetch_assoc(mysqli_query($conn, "SELECT * FROM users WHERE id = '".$
         .step-box { font-size: 11px; color: #555; background: #fffcf0; padding: 12px; border-radius: 8px; border-left: 3px solid var(--gold); }
         
         /* Navigation */
-        .bottom-nav { background: white; border-top: 1px solid #eee; height: 70px; }
+        .bottom-nav { background: white; border-top: 1px solid #eee; height: 75px; }
         .nav-item { text-decoration: none; color: #bbb; font-size: 11px; font-weight: 600; text-align: center; }
         .nav-item.active { color: var(--navy); }
         .nav-item img { width: 24px; display: block; margin: 0 auto 3px; }
@@ -71,7 +71,7 @@ $u = mysqli_fetch_assoc(mysqli_query($conn, "SELECT * FROM users WHERE id = '".$
             <a href="https://chat.whatsapp.com/LLGhNA8L0HfDNmU34S8CDt?mode=gi_t" class="btn btn-success btn-sm fw-bold rounded-pill px-3">JOIN NOW</a>
         </div>
 
-        <h6 class="fw-bold text-muted mb-3 px-1">AVAILABLE PACKAGES</h6>
+        <h6 class="fw-bold text-muted mb-3 px-1 text-uppercase small">Investment Packages</h6>
 
         <?php
         $plans = [
@@ -103,11 +103,11 @@ $u = mysqli_fetch_assoc(mysqli_query($conn, "SELECT * FROM users WHERE id = '".$
         <a href="dashboard.php" class="nav-item active">
             <img src="https://img.icons8.com/material-rounded/24/001f3f/home.png">Home
         </a>
+        <a href="orders.php" class="nav-item">
+            <img src="https://img.icons8.com/material-outlined/24/cccccc/clipboard.png">Orders
+        </a>
         <a href="team.php" class="nav-item">
             <img src="https://img.icons8.com/material-outlined/24/cccccc/conference-call.png">Team
-        </a>
-        <a href="withdraw_history.php" class="nav-item">
-            <img src="https://img.icons8.com/material-outlined/24/cccccc/clock.png">Logs
         </a>
         <a href="settings.php" class="nav-item">
             <img src="https://img.icons8.com/material-outlined/24/cccccc/user-male-circle.png">Mine
