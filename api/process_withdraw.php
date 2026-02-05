@@ -1,35 +1,31 @@
 <?php
-include 'db.php';
 session_start();
+include 'db.php';
 
-if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-    $user_id = $_POST['user_id'];
-    $amount = $_POST['amount'];
-    $bank_name = $_POST['bank_name'];
-    $account_number = $_POST['account_number'];
+if(isset($_POST['bank_name'])){
+    $u_id = $_POST['user_id'];
+    $amt = (float)$_POST['amount']; // Convert to number for math
+    $bank = mysqli_real_escape_string($conn, $_POST['bank_name']);
+    $acc = mysqli_real_escape_string($conn, $_POST['account_number']);
 
-    // 1. Check if amount is up to 1k
-    if ($amount < 1000) {
-        die("<script>alert('Minimum withdrawal na ₦1,000.'); window.history.back();</script>");
+    // 1. CHECK MINIMUM LIMIT (1k)
+    if($amt < 1000){
+        header("Location: ../withdraw.php?error=Minimum withdrawal is ₦1,000");
+        exit();
     }
 
-    // 2. Verify user has enough balance
-    $user_query = mysqli_query($conn, "SELECT balance FROM users WHERE id = '$user_id'");
-    $user = mysqli_fetch_assoc($user_query);
-
-    if ($user['balance'] >= $amount) {
-        // 3. Deduct money from balance immediately
-        mysqli_query($conn, "UPDATE users SET balance = balance - $amount WHERE id = '$user_id'");
-
-        // 4. Insert into withdrawals table with bank info
-        $sql = "INSERT INTO withdrawals (user_id, amount, bank_name, account_number, status) 
-                VALUES ('$user_id', '$amount', '$bank_name', '$account_number', 'pending')";
+    // 2. CHECK USER BALANCE
+    $res = mysqli_fetch_assoc(mysqli_query($conn, "SELECT balance FROM users WHERE id = '$u_id'"));
+    
+    if($res['balance'] >= $amt){
+        // 3. Subtract money and log the request
+        mysqli_query($conn, "UPDATE users SET balance = balance - '$amt' WHERE id = '$u_id'");
+        mysqli_query($conn, "INSERT INTO withdrawals (user_id, amount, bank_name, account_number, status) 
+                            VALUES ('$u_id', '$amt', '$bank', '$acc', 'pending')");
         
-        if (mysqli_query($conn, $sql)) {
-            echo "<script>alert('Withdrawal Request Sent! Admin go check am.'); window.location.href='../dashboard.php';</script>";
-        }
+        header("Location: ../withdraw.php?success=Request Sent! Wait for alert.");
     } else {
-        echo "<script>alert('Insufficient balance for this withdrawal.'); window.history.back();</script>";
+        header("Location: ../withdraw.php?error=Insufficient Balance!");
     }
 }
 ?>
