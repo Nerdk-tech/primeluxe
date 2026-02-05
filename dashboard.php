@@ -34,7 +34,7 @@ $u = mysqli_fetch_assoc(mysqli_query($conn, "SELECT * FROM users WHERE id = '".$
     <div class="container mt-4">
         <div class="alert alert-info py-2 d-flex align-items-center justify-content-between shadow-sm" style="border-radius: 12px;">
             <span class="small fw-bold">📢 Join Official Community:</span>
-            <a href="https://chat.whatsapp.com/YOUR_GROUP_LINK" class="btn btn-success btn-sm fw-bold">WhatsApp Group</a>
+            <a href="https://chat.whatsapp.com/LLGhNA8L0HfDNmU34S8CDt?mode=gi_t" class="btn btn-success btn-sm fw-bold">WhatsApp Group</a>
         </div>
 
         <div class="d-flex justify-content-around my-4">
