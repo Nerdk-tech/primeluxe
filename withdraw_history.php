@@ -31,50 +31,53 @@ $result = mysqli_query($conn, $query);
 </head>
 <body>
 
-    <div class="top-bar text-center shadow">
-        <h4 class="fw-bold m-0">WITHDRAWAL LOGS</h4>
-        <p class="small opacity-75 mb-0">Track your cashouts</p>
-    </div>
+<div class="top-bar text-center shadow">
+    <h4 class="fw-bold m-0">WITHDRAWAL LOGS</h4>
+    <p class="small opacity-75 mb-0">Track your cashouts</p>
+</div>
 
-    <div class="container mt-4">
-        <?php if(mysqli_num_rows($result) > 0): ?>
-            <?php while($row = mysqli_fetch_assoc($result)): 
-                // Determine the CSS class based on status
-                $statusClass = 'status-pending';
-                if($row['status'] == 'completed') $statusClass = 'status-completed';
-                if($row['status'] == 'rejected') $statusClass = 'status-rejected';
-            ?>
-            <div class="card history-card shadow-sm">
-                <div class="card-body d-flex justify-content-between align-items-center">
-                    <div>
-                        <h6 class="fw-bold mb-1">₦<?php echo number_format($row['amount'], 2); ?></h6>
-                        <small class="text-muted d-block" style="font-size: 11px;">
-                            <?php echo $row['bank_name']; ?> • <?php echo $row['account_number']; ?>
-                        </small>
-                        <small class="text-muted" style="font-size: 10px;">
-                            <?php echo date('M d, Y - h:i A', strtotime($row['created_at'])); ?>
-                        </small>
-                    </div>
-                    <div class="text-end">
-                        <span class="<?php echo $statusClass; ?>">
-                            <?php echo strtoupper($row['status']); ?>
-                        </span>
-                    </div>
-                </div>
+<div class="container mt-4">
+<?php if(mysqli_num_rows($result) > 0): ?>
+<?php while($row = mysqli_fetch_assoc($result)):
+    $statusClass = 'status-pending';
+    if($row['status'] == 'completed') $statusClass = 'status-completed';
+    if($row['status'] == 'rejected') $statusClass = 'status-rejected';
+?>
+    <div class="card history-card shadow-sm">
+        <div class="card-body d-flex justify-content-between align-items-center">
+            <div>
+                <h6 class="fw-bold mb-1">₦<?php echo number_format($row['amount'], 2); ?></h6>
+                <small class="text-muted d-block" style="font-size:11px;">
+                    <?php echo htmlspecialchars($row['bank_name']); ?> • 
+                    <?php echo htmlspecialchars($row['account_number']); ?>
+                </small>
+                <small class="text-muted d-block" style="font-size:11px;">
+                    <?php echo htmlspecialchars($row['account_name']); ?>
+                </small>
+                <small class="text-muted" style="font-size:10px;">
+                    <?php echo date('M d, Y - h:i A', strtotime($row['created_at'])); ?>
+                </small>
             </div>
-            <?php endwhile; ?>
-        <?php else: ?>
-            <div class="text-center mt-5">
-                <img src="https://cdn-icons-png.flaticon.com/512/4076/4076432.png" width="80" class="opacity-25 mb-3">
-                <p class="text-muted">No withdrawal history found.</p>
-                <a href="withdraw.php" class="btn btn-outline-primary rounded-pill px-4">Withdraw Now</a>
+            <div class="text-end">
+                <span class="<?php echo $statusClass; ?>">
+                    <?php echo strtoupper($row['status']); ?>
+                </span>
             </div>
-        <?php endif; ?>
-
-        <div class="mt-4 text-center">
-            <a href="dashboard.php" class="btn btn-dark w-100 py-2 rounded-pill shadow">BACK TO DASHBOARD</a>
         </div>
     </div>
+<?php endwhile; ?>
+<?php else: ?>
+    <div class="text-center mt-5">
+        <img src="https://cdn-icons-png.flaticon.com/512/4076/4076432.png" width="80" class="opacity-25 mb-3">
+        <p class="text-muted">No withdrawal history found.</p>
+        <a href="withdraw.php" class="btn btn-outline-primary rounded-pill px-4">Withdraw Now</a>
+    </div>
+<?php endif; ?>
+
+    <div class="mt-4 text-center">
+        <a href="dashboard.php" class="btn btn-dark w-100 py-2 rounded-pill shadow">BACK TO DASHBOARD</a>
+    </div>
+</div>
 
 </body>
 </html>
