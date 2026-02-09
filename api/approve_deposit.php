@@ -1,19 +1,17 @@
 <?php
-include 'db.php';
+include '../api/db.php';
+
 $id = $_GET['id'];
 
-$dep = mysqli_fetch_assoc(mysqli_query($conn, "SELECT * FROM deposits WHERE id = '$id'"));
-$uid = $dep['user_id'];
-$amt = $dep['amount'];
+$d = mysqli_fetch_assoc(mysqli_query($conn, "SELECT * FROM deposits WHERE id='$id' AND status='pending'"));
+if(!$d) exit();
 
-// 1. Give User the money
-mysqli_query($conn, "UPDATE users SET balance = balance + $amt WHERE id = '$uid'");
+$uid = $d['user_id'];
+$amt = $d['amount'];
 
-// 2. Mark as completed
-mysqli_query($conn, "UPDATE deposits SET status = 'completed' WHERE id = '$id'");
+mysqli_query($conn, "UPDATE users SET balance = balance + $amt WHERE id='$uid'");
+mysqli_query($conn, "UPDATE deposits SET status='approved' WHERE id='$id'");
 
-// 3. Optional: Add Referral Commission here (L1 25%, L2 3%)
-// ...
-
-header("Location: ../admin.php?msg=DepositApproved");
+header("Location: deposits.php?success=Deposit approved");
+exit();
 ?>
