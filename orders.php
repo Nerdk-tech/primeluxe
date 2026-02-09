@@ -9,7 +9,7 @@ if(!isset($_SESSION['user_id'])) {
 
 $uid = $_SESSION['user_id'];
 
-// Fetch all active investments for the user
+// Fetch all active investments
 $query = "SELECT * FROM investments WHERE user_id = '$uid' AND status = 'active' ORDER BY id DESC";
 $result = mysqli_query($conn, $query);
 ?>
@@ -27,10 +27,6 @@ $result = mysqli_query($conn, $query);
         .order-card { background:white; border-radius:18px; border:none; border-left: 5px solid var(--navy); }
         .income-timer { background: #e7f3ff; color:#0d6efd; font-weight:bold; font-size:13px; padding: 10px; border-radius: 10px; }
         .plan-icon { background:var(--navy); border-radius:15px; width:70px; height:70px; display:flex; align-items:center; justify-content:center; }
-        
-        /* Fixed WhatsApp Floating Button */
-        .float-wa { position:fixed; bottom:90px; left:20px; z-index: 1000; }
-        
         .bottom-nav { background:white; border-top:1px solid #eee; position:fixed; bottom:0; width:100%; height:75px; display:flex; justify-content:space-around; align-items:center; z-index: 1000; }
         .nav-item { text-decoration:none; color:#bbb; font-size:11px; text-align:center; }
         .nav-item.active { color:var(--navy); font-weight:bold; }
@@ -46,15 +42,19 @@ $result = mysqli_query($conn, $query);
 <div class="container mt-4">
 <?php if(mysqli_num_rows($result) > 0): ?>
     <?php while($inv = mysqli_fetch_assoc($result)): 
-        $earned = $inv['current_step'] * $inv['daily_income'];
+        // FIX: Ensure values exist before calculation to prevent errors
+        $daily = (float)($inv['daily_income'] ?? 0);
+        $steps = (int)($inv['current_step'] ?? 0);
+        $max   = (int)($inv['max_steps'] ?? 0);
+        $earned = $steps * $daily;
     ?>
     <div class="card order-card shadow-sm p-3 mb-3">
         <div class="d-flex justify-content-between align-items-center">
             <div>
-                <h5 class="fw-bold mb-1">LUXE VIP <?php echo $inv['vip_level']; ?></h5>
-                <div class="small text-muted mb-1">Duration: <span class="text-dark fw-bold"><?php echo $inv['current_step']; ?> / <?php echo $inv['max_steps']; ?> Days</span></div>
-                <div class="small text-muted mb-1">Daily Income: <span class="text-success fw-bold">₦<?php echo number_format($inv['daily_income']); ?></span></div>
-                <div class="small text-muted">Total Earned: <span class="text-primary fw-bold">₦<?php echo number_format($earned); ?></span></div>
+                <h5 class="fw-bold mb-1">LUXE VIP <?php echo htmlspecialchars($inv['vip_level'] ?? '0'); ?></h5>
+                <div class="small text-muted mb-1">Duration: <span class="text-dark fw-bold"><?php echo $steps; ?> / <?php echo $max; ?> Days</span></div>
+                <div class="small text-muted mb-1">Daily Income: <span class="text-success fw-bold">₦<?php echo number_format($daily, 2); ?></span></div>
+                <div class="small text-muted">Total Earned: <span class="text-primary fw-bold">₦<?php echo number_format($earned, 2); ?></span></div>
             </div>
             <div class="plan-icon shadow">
                 <i class="bi bi-shield-check text-white fs-1"></i>
@@ -77,39 +77,27 @@ $result = mysqli_query($conn, $query);
 <?php endif; ?>
 </div>
 
-<a href="https://wa.me/2348077502802" class="float-wa">
-    <img src="https://img.icons8.com/color/48/whatsapp.png" alt="WhatsApp Support">
-</a>
-
 <div class="bottom-nav shadow">
-    <a href="dashboard.php" class="nav-item">
-        <i class="bi bi-house"></i>Home
-    </a>
-    <a href="orders.php" class="nav-item active">
-        <i class="bi bi-clipboard-check-fill"></i>Orders
-    </a>
-    <a href="team.php" class="nav-item">
-        <i class="bi bi-people"></i>Team
-    </a>
-    <a href="settings.php" class="nav-item">
-        <i class="bi bi-person-circle"></i>Profile
-    </a>
+    <a href="dashboard.php" class="nav-item"><i class="bi bi-house"></i>Home</a>
+    <a href="orders.php" class="nav-item active"><i class="bi bi-clipboard-check-fill"></i>Orders</a>
+    <a href="team.php" class="nav-item"><i class="bi bi-people"></i>Team</a>
+    <a href="settings.php" class="nav-item"><i class="bi bi-person-circle"></i>Profile</a>
 </div>
 
 <script>
 function updateTimers() {
     const now = new Date();
     const next = new Date();
-    next.setHours(24,0,0,0); // Countdown to midnight
+    next.setHours(24,0,0,0); // Settlement at Midnight
     const diff = next - now;
+
+    if (diff <= 0) { window.location.reload(); }
 
     const h = Math.floor(diff / (1000 * 60 * 60));
     const m = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
     const s = Math.floor((diff % (1000 * 60)) / 1000);
 
-    const timeStr = h + "h : " + m + "m : " + s + "s";
-    
-    // Select all timer spans and update them
+    const timeStr = `${h}h : ${m}m : ${s}s`;
     document.querySelectorAll('[id^="timer-"]').forEach(timer => {
         timer.innerHTML = timeStr;
     });
@@ -117,6 +105,5 @@ function updateTimers() {
 setInterval(updateTimers, 1000);
 updateTimers();
 </script>
-
 </body>
 </html>

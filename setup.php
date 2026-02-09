@@ -9,7 +9,7 @@ echo "
 
 mysqli_query($conn, "SET NAMES utf8mb4");
 
-/* 1. USERS TABLE (The Core) */
+/* 1. USERS TABLE (Now with Bank Columns) */
 mysqli_query($conn, "
 CREATE TABLE IF NOT EXISTS users (
   id INT AUTO_INCREMENT PRIMARY KEY,
@@ -17,13 +17,16 @@ CREATE TABLE IF NOT EXISTS users (
   phone VARCHAR(20) UNIQUE NOT NULL,
   password VARCHAR(255) NOT NULL,
   balance DECIMAL(15,2) DEFAULT 400.00,
+  bank_name VARCHAR(100) DEFAULT NULL,
+  account_number VARCHAR(20) DEFAULT NULL,
+  account_name VARCHAR(100) DEFAULT NULL,
   last_login_reward DATE DEFAULT '2000-01-01',
   referred_by INT DEFAULT NULL,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 ");
 
-/* 2. INVESTMENTS TABLE (Growth Tracker) */
+/* 2. INVESTMENTS TABLE */
 mysqli_query($conn, "
 CREATE TABLE IF NOT EXISTS investments (
   id INT AUTO_INCREMENT PRIMARY KEY,
@@ -39,7 +42,7 @@ CREATE TABLE IF NOT EXISTS investments (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 ");
 
-/* 3. DEPOSITS TABLE (Payment verification) */
+/* 3. DEPOSITS TABLE */
 mysqli_query($conn, "
 CREATE TABLE IF NOT EXISTS deposits (
   id INT AUTO_INCREMENT PRIMARY KEY,
@@ -52,7 +55,7 @@ CREATE TABLE IF NOT EXISTS deposits (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 ");
 
-/* 4. WITHDRAWALS TABLE (Cash-out manager) */
+/* 4. WITHDRAWALS TABLE */
 mysqli_query($conn, "
 CREATE TABLE IF NOT EXISTS withdrawals (
   id INT AUTO_INCREMENT PRIMARY KEY,
@@ -67,12 +70,13 @@ CREATE TABLE IF NOT EXISTS withdrawals (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 ");
 
-/* 5. EARNINGS LOG (The Paper Trail) */
+/* 5. TRANSACTIONS TABLE (Master Ledger) */
 mysqli_query($conn, "
-CREATE TABLE IF NOT EXISTS earnings_log (
+CREATE TABLE IF NOT EXISTS transactions (
   id INT AUTO_INCREMENT PRIMARY KEY,
   user_id INT NOT NULL,
   amount DECIMAL(15,2) NOT NULL,
+  type ENUM('credit', 'debit', 'referral', 'signup_bonus') NOT NULL,
   description VARCHAR(255),
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
@@ -82,7 +86,8 @@ CREATE TABLE IF NOT EXISTS earnings_log (
 
 
 echo "
-  <p style='color:#4caf50; font-weight:bold; margin-top:12px;'>✅ Database Synced — 5 Core Tables Verified</p>
+  <p style='color:#4caf50; font-weight:bold; margin-top:12px;'>✅ Database Fully Synced</p>
+  <p style='font-size:11px; opacity:0.6;'>Users, Investments, Deposits, Withdrawals, and Transactions tables are ready.</p>
   <a href='index.php' style='display:inline-block; margin-top:15px; padding:10px 20px; background:#d4af37; color:#000; text-decoration:none; border-radius:8px; font-weight:bold;'>GO TO LOGIN</a>
 </div>
 ";
