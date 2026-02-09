@@ -1,45 +1,58 @@
 <?php
 include 'db.php';
 
-// Define the steps Ella gave you for each VIP level
+/* Ella's 24-Hour Growth Steps (Daily ROI)
+*/
 $vip_steps = [
-    1 => [7250, 11500, 15750, 20000],        // VIP 1 Steps
-    2 => [29750, 36500, 43250, 50000],      // VIP 2 Steps
-    3 => [58400, 63800, 69200, 74600, 80000], // VIP 3 Steps
-    4 => [88400, 93800, 99200, 104600, 110000], // VIP 4 Steps
-    5 => [120400, 127800, 135200, 142600, 150000] // VIP 5 Steps
+    1 => [7250, 11500, 15750, 20000],
+    2 => [29750, 36500, 43250, 50000],
+    3 => [58400, 63800, 69200, 74600, 80000],
+    4 => [88400, 93800, 99200, 104600, 110000],
+    5 => [120400, 127800, 135200, 142600, 150000]
 ];
 
-// 1. Find investments where it's been at least 48 hours since the last growth
-$sql = "SELECT * FROM investments WHERE status = 'active' AND last_growth <= NOW() - INTERVAL 48 HOUR";
+// Changed INTERVAL to 24 HOUR for daily updates
+$sql = "SELECT * FROM investments WHERE status = 'active' AND last_growth <= NOW() - INTERVAL 24 HOUR";
 $result = mysqli_query($conn, $sql);
+
+
 
 while($inv = mysqli_fetch_assoc($result)) {
     $inv_id = $inv['id'];
     $uid = $inv['user_id'];
     $vip = $inv['vip_level'];
-    $current_step_idx = $inv['current_step']; // Starts at 0
+    $current_step_idx = $inv['current_step']; 
     
-    // Check if there are steps left in this VIP plan
     if (isset($vip_steps[$vip][$current_step_idx])) {
         $new_balance = $vip_steps[$vip][$current_step_idx];
         
-        // Update user balance to the new step amount
-        mysqli_query($conn, "UPDATE users SET balance = $new_balance WHERE id = $uid");
+        mysqli_begin_transaction($conn);
         
-        // Move to the next step index and update the timestamp
-        $next_step = $current_step_idx + 1;
-        
-        // If this was the final step, mark investment as completed
-        $new_status = ($next_step >= count($vip_steps[$vip])) ? 'completed' : 'active';
-        
-        mysqli_query($conn, "UPDATE investments SET 
-            current_step = $next_step, 
-            last_growth = CURRENT_TIMESTAMP, 
-            status = '$new_status' 
-            WHERE id = $inv_id");
+        try {
+            // Update balance
+            mysqli_query($conn, "UPDATE users SET balance = $new_balance WHERE id = $uid");
             
-        echo "User $uid moved to Step $next_step (₦$new_balance)<br>";
+            // Log earning
+            $desc = "Daily VIP $vip Growth (Step " . ($current_step_idx + 1) . ")";
+            mysqli_query($conn, "INSERT INTO earnings_log (user_id, amount, description) VALUES ($uid, $new_balance, '$desc')");
+            
+            // Increment step and check for completion
+            $next_step = $current_step_idx + 1;
+            $new_status = ($next_step >= count($vip_steps[$vip])) ? 'completed' : 'active';
+            
+            mysqli_query($conn, "UPDATE investments SET 
+                current_step = $next_step, 
+                last_growth = CURRENT_TIMESTAMP, 
+                status = '$new_status' 
+                WHERE id = $inv_id");
+                
+            mysqli_commit($conn);
+            echo "Day " . $next_step . " processed for User $uid.<br>";
+            
+        } catch (Exception $e) {
+            mysqli_rollback($conn);
+            echo "Error processing User $uid.<br>";
+        }
     }
 }
 ?>
