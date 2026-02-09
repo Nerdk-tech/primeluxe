@@ -3,242 +3,117 @@ session_start();
 include 'api/db.php';
 if(!isset($_SESSION['user_id'])) { header("Location: index.php"); exit(); }
 
-$u = mysqli_fetch_assoc(mysqli_query($conn, "SELECT * FROM users WHERE id = '".$_SESSION['user_id']."'"));
+$uid = $_SESSION['user_id'];
+$u = mysqli_fetch_assoc(mysqli_query($conn, "SELECT * FROM users WHERE id = '$uid'"));
 
-// Only users with active investment can withdraw
-$inv_check = mysqli_query($conn, "SELECT id FROM investments WHERE user_id = '".$_SESSION['user_id']."' AND status = 'active' LIMIT 1");
+// Logic: Withdrawal only if they have an active investment
+$inv_check = mysqli_query($conn, "SELECT id FROM investments WHERE user_id = '$uid' AND status = 'active' LIMIT 1");
 $can_withdraw = mysqli_num_rows($inv_check) > 0;
 
-// Referral Details
-$invitation_code = $u['id'];
-$ref_link = "https://primeluxe-lgu5.onrender.com/?ref=" . $u['id'];
+// Ella's VIP Tier Data
+$plans = [
+    'VIP 1 (30 Days Duration)' => [
+        ['id' => 1, 'price' => 3000, 'daily' => 400, 'total' => 12000, 'days' => 30],
+        ['id' => 2, 'price' => 9000, 'daily' => 500, 'total' => 15000, 'days' => 30],
+        ['id' => 3, 'price' => 15000, 'daily' => 650, 'total' => 19500, 'days' => 30],
+        ['id' => 4, 'price' => 21000, 'daily' => 1000, 'total' => 30000, 'days' => 30],
+        ['id' => 5, 'price' => 51000, 'daily' => 2000, 'total' => 60000, 'days' => 30],
+    ],
+    'VIP 2 (40 Days Duration)' => [
+        ['id' => 6, 'price' => 80000, 'daily' => 2500, 'total' => 100000, 'days' => 40],
+        ['id' => 7, 'price' => 100000, 'daily' => 3000, 'total' => 120000, 'days' => 40],
+        ['id' => 8, 'price' => 150000, 'daily' => 4250, 'total' => 170000, 'days' => 40],
+        ['id' => 9, 'price' => 250000, 'daily' => 6750, 'total' => 270000, 'days' => 40],
+    ],
+    'VIP 3 (40 Days Duration)' => [
+        ['id' => 10, 'price' => 500000, 'daily' => 13000, 'total' => 520000, 'days' => 40],
+        ['id' => 11, 'price' => 800000, 'daily' => 22500, 'total' => 900000, 'days' => 40],
+        ['id' => 12, 'price' => 1000000, 'daily' => 30000, 'total' => 1200000, 'days' => 40],
+    ]
+];
 ?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Dashboard | Prime Luxe</title>
-<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-<style>
-:root { --navy:#0b1b2b; --gold:#d4af37; }
-body { background:#0e0e0e; padding-bottom:90px; font-family:'Segoe UI',sans-serif; color:#fff; }
-
-/* Top Bar */
-.top-nav-bar {
-  background: linear-gradient(135deg,#d4af37,#8f6b1f);
-  padding: 14px 18px;
-  color:#000;
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-  font-weight:700;
-}
-
-/* Banner */
-.banner-container {
-  margin: 14px;
-  border-radius: 14px;
-  overflow:hidden;
-  box-shadow:0 6px 14px rgba(212,175,55,.25);
-}
-.banner-container img { width:100%; display:block; }
-
-/* Cards */
-.invitation-card, .balance-section {
-  background:#141414;
-  margin: 0 14px 16px;
-  padding: 16px;
-  border-radius: 14px;
-  border:1px solid rgba(212,175,55,.25);
-  box-shadow:0 4px 12px rgba(0,0,0,.4);
-}
-
-.invitation-row {
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-  margin-bottom:10px;
-  padding-bottom:10px;
-  border-bottom:1px solid rgba(255,255,255,.08);
-}
-
-.invitation-label {
-  font-size:11px;
-  color:#aaa;
-  font-weight:600;
-  letter-spacing:.5px;
-}
-
-.invitation-value {
-  font-size:15px;
-  font-weight:800;
-  color:var(--gold);
-}
-
-.share-link-box {
-  background:#0c0c0c;
-  padding:10px;
-  border-radius:10px;
-  font-size:11px;
-  word-break:break-all;
-  color:#ccc;
-  border:1px dashed rgba(212,175,55,.4);
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-}
-
-.copy-btn {
-  background:linear-gradient(135deg,#d4af37,#8f6b1f);
-  color:#000;
-  border:none;
-  padding:5px 14px;
-  border-radius:20px;
-  font-size:11px;
-  font-weight:800;
-  margin-left:10px;
-}
-
-/* Balance */
-.balance-label {
-  font-size:11px;
-  color:#aaa;
-  text-transform:uppercase;
-  letter-spacing:1px;
-}
-
-.balance-val {
-  font-size:30px;
-  font-weight:900;
-  color:var(--gold);
-  margin:6px 0 2px;
-}
-
-/* Buttons */
-.btn-gold {
-  background:linear-gradient(135deg,#d4af37,#8f6b1f);
-  border:none;
-  color:#000;
-  font-weight:800;
-  border-radius:30px;
-  padding:6px 18px;
-}
-
-.btn-outline-gold {
-  background:transparent;
-  border:1px solid var(--gold);
-  color:var(--gold);
-  font-weight:800;
-  border-radius:30px;
-  padding:6px 18px;
-}
-
-/* Bottom Nav */
-.bottom-nav {
-  background:#111;
-  height:72px;
-  position:fixed;
-  bottom:0;
-  width:100%;
-  display:flex;
-  justify-content:space-around;
-  align-items:center;
-  border-top:1px solid rgba(212,175,55,.25);
-  z-index:1000;
-}
-
-.nav-link {
-  text-decoration:none;
-  color:#888;
-  font-size:10px;
-  text-align:center;
-  flex:1;
-}
-
-.nav-link.active {
-  color:var(--gold);
-  font-weight:800;
-}
-
-.nav-link img {
-  width:22px;
-  display:block;
-  margin:0 auto 3px;
-  opacity:.5;
-}
-
-.nav-link.active img {
-  opacity:1;
-  filter:drop-shadow(0 0 3px rgba(212,175,55,.7));
-}
-</style>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Prime Luxe Dashboard</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <style>
+        :root { --main-blue: #007bff; --bg-grey: #f0f2f5; }
+        body { background: var(--bg-grey); font-family: sans-serif; padding-bottom: 90px; }
+        .header-section { background: #3b82f6; color: white; padding: 30px 15px 60px; text-align: center; border-radius: 0 0 25px 25px; }
+        .balance-card { background: white; color: #333; border-radius: 20px; padding: 25px; margin: -40px 15px 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); text-align: center; }
+        .action-row { display: flex; gap: 10px; padding: 0 15px 20px; }
+        .btn-action { background: #3b82f6; color: white; flex: 1; border: none; padding: 12px; border-radius: 10px; font-weight: bold; text-decoration: none; text-align: center; font-size: 14px; }
+        .support-links { background: #fff; margin: 0 15px 20px; padding: 15px; border-radius: 15px; border-left: 5px solid #25d366; }
+        .product-card { background: white; border-radius: 15px; overflow: hidden; border: none; box-shadow: 0 2px 8px rgba(0,0,0,0.05); margin-bottom: 15px; }
+        .product-img { background: #800020; color: white; padding: 10px; text-align: center; font-size: 11px; font-weight: bold; }
+        .btn-buy { background: #007bff; color: white; border-radius: 20px; width: 100%; font-weight: bold; border: none; padding: 8px; margin-top: 10px; }
+        .category-title { color: #001f3f; font-weight: 800; padding: 10px 15px; margin-top: 10px; border-left: 4px solid #3b82f6; }
+        .bottom-nav { background: white; position: fixed; bottom: 0; width: 100%; display: flex; justify-content: space-around; padding: 12px 0; border-top: 1px solid #ddd; z-index: 100; }
+        .nav-link { color: #888; text-decoration: none; font-size: 12px; text-align: center; }
+        .nav-link.active { color: #3b82f6; font-weight: bold; }
+    </style>
 </head>
 <body>
 
-<div class="top-nav-bar">
-  <div>Hi, <?php echo htmlspecialchars($u['phone']); ?></div>
-  <a href="https://wa.me/2348077502802" target="_blank">
-    <img src="https://img.icons8.com/color/48/whatsapp.png" width="26">
-  </a>
-</div>
-
-<div class="banner-container">
-  <img src="https://primeluxe-lgu5.onrender.com/assets/banner.jpg" onerror="this.src='https://via.placeholder.com/400x150?text=Prime+Luxe+Investment'">
-</div>
-
-<div class="invitation-card">
-  <div class="invitation-row">
-    <div>
-      <div class="invitation-label">INVITATION CODE</div>
-      <div class="invitation-value"><?php echo $invitation_code; ?></div>
+    <div class="header-section">
+        <h5 class="fw-bold m-0">PRIME LUXE</h5>
+        <p class="small opacity-75">Welcome, <?php echo $u['phone']; ?></p>
     </div>
-    <button onclick="copyText('<?php echo $invitation_code; ?>')" class="copy-btn">COPY</button>
-  </div>
 
-  <div class="invitation-label mb-1">SHARE LINK</div>
-  <div class="share-link-box">
-    <span id="refLink"><?php echo $ref_link; ?></span>
-    <button onclick="copyText('<?php echo $ref_link; ?>')" class="copy-btn">COPY</button>
-  </div>
-</div>
+    <div class="balance-card">
+        <p class="text-muted small mb-1">Available Balance</p>
+        <h2 class="fw-bold">₦<?php echo number_format($u['balance'], 2); ?></h2>
+    </div>
 
-<div class="balance-section text-center">
-  <div class="balance-label">Total Balance</div>
-  <div class="balance-val">₦<?php echo number_format($u['balance'], 2); ?></div>
+    <div class="action-row">
+        <a href="deposit.php" class="btn-action">Deposit</a>
+        <a href="<?php echo $can_withdraw ? 'withdraw.php' : '#'; ?>" 
+           class="btn-action" 
+           onclick="<?php echo !$can_withdraw ? "alert('You must have an active investment to withdraw'); return false;" : ""; ?>">
+           Withdraw
+        </a>
+    </div>
 
-  <div class="d-flex justify-content-center gap-2 mt-3">
-    <a href="deposit.php" class="btn btn-gold btn-sm px-4">DEPOSIT</a>
-    <?php if($can_withdraw): ?>
-      <a href="withdraw.php" class="btn btn-outline-gold btn-sm px-4">WITHDRAW</a>
-    <?php else: ?>
-      <button class="btn btn-outline-gold btn-sm px-4" disabled>WITHDRAW</button>
-    <?php endif; ?>
-  </div>
-</div>
+    <div class="support-links">
+        <div class="small fw-bold text-success mb-1"><i class="bi bi-whatsapp"></i> Support Channel</div>
+        <a href="https://chat.whatsapp.com/LLGhNA8L0HfDNmU34S8CDt?mode=gi_t" class="btn btn-sm btn-outline-success rounded-pill px-3 me-2">WhatsApp Group</a>
+        <a href="https://wa.me/2348077502802" class="btn btn-sm btn-success rounded-pill px-3">Contact Support</a>
+    </div>
 
-<div class="bottom-nav">
-  <a href="dashboard.php" class="nav-link active">
-    <img src="https://img.icons8.com/material-rounded/48/d4af37/home.png"><br>Home
-  </a>
-  <a href="orders.php" class="nav-link">
-    <img src="https://img.icons8.com/material-outlined/48/000000/clipboard.png"><br>Orders
-  </a>
-  <a href="team.php" class="nav-link">
-    <img src="https://img.icons8.com/material-outlined/48/000000/conference-call.png"><br>Team
-  </a>
-  <a href="settings.php" class="nav-link">
-    <img src="https://img.icons8.com/material-outlined/48/000000/user-male-circle.png"><br>Profile
-  </a>
-</div>
+    <div class="container">
+        <?php foreach($plans as $cat => $items): ?>
+            <div class="category-title mb-3"><?php echo $cat; ?></div>
+            <div class="row g-3">
+                <?php foreach($items as $p): ?>
+                <div class="col-6">
+                    <div class="product-card">
+                        <div class="product-img">PRIME LUXE INVESTMENT</div>
+                        <div class="p-3">
+                            <div class="small text-muted">Price: <b class="text-dark">₦<?php echo number_format($p['price']); ?></b></div>
+                            <div class="small text-muted">Daily: <b class="text-success">₦<?php echo number_format($p['daily']); ?></b></div>
+                            <div class="small text-muted">Term: <b class="text-danger"><?php echo $p['days']; ?> Days</b></div>
+                            <div class="small text-muted">Total: <b class="text-primary">₦<?php echo number_format($p['total']); ?></b></div>
+                            <form action="api/buy_vip.php" method="POST">
+                                <input type="hidden" name="vip_id" value="<?php echo $p['id']; ?>">
+                                <button type="submit" class="btn-buy shadow-sm">INVEST</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+                <?php endforeach; ?>
+            </div>
+        <?php endforeach; ?>
+    </div>
 
-<script>
-function copyText(val){
-  navigator.clipboard.writeText(val).then(()=>{
-    alert("Copied!");
-  });
-}
-</script>
+    <div class="bottom-nav">
+        <a href="dashboard.php" class="nav-link active"><i class="bi bi-house-door fs-4"></i><br>Home</a>
+        <a href="orders.php" class="nav-link"><i class="bi bi-wallet2 fs-4"></i><br>Orders</a>
+        <a href="team.php" class="nav-link"><i class="bi bi-people fs-4"></i><br>Team</a>
+        <a href="settings.php" class="nav-link"><i class="bi bi-person-circle fs-4"></i><br>Profile</a>
+    </div>
 
 </body>
 </html>
