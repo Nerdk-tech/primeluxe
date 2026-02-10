@@ -55,25 +55,26 @@ CREATE TABLE IF NOT EXISTS deposits (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 ");
 
-/* FIX: Adding missing columns to Deposits table individually to avoid syntax errors */
-mysqli_query($conn, "ALTER TABLE deposits ADD COLUMN bank_name VARCHAR(100) AFTER amount");
-mysqli_query($conn, "ALTER TABLE deposits ADD COLUMN account_number VARCHAR(20) AFTER bank_name");
-mysqli_query($conn, "ALTER TABLE deposits ADD COLUMN account_name VARCHAR(100) AFTER account_number");
-
 /* 4. WITHDRAWALS TABLE */
 mysqli_query($conn, "
 CREATE TABLE IF NOT EXISTS withdrawals (
   id INT AUTO_INCREMENT PRIMARY KEY,
   user_id INT NOT NULL,
   amount DECIMAL(15,2) NOT NULL,
-  bank_name VARCHAR(100),
-  account_number VARCHAR(20),
-  account_name VARCHAR(100),
   status ENUM('pending', 'completed', 'rejected') DEFAULT 'pending',
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 ");
+
+/* FORCE UPDATE: This part fixes the 'Unknown Column' error shown in your screenshot */
+mysqli_query($conn, "ALTER TABLE deposits ADD COLUMN IF NOT EXISTS bank_name VARCHAR(100) AFTER amount");
+mysqli_query($conn, "ALTER TABLE deposits ADD COLUMN IF NOT EXISTS account_number VARCHAR(20) AFTER bank_name");
+mysqli_query($conn, "ALTER TABLE deposits ADD COLUMN IF NOT EXISTS account_name VARCHAR(100) AFTER account_number");
+
+mysqli_query($conn, "ALTER TABLE withdrawals ADD COLUMN IF NOT EXISTS bank_name VARCHAR(100) AFTER amount");
+mysqli_query($conn, "ALTER TABLE withdrawals ADD COLUMN IF NOT EXISTS account_name VARCHAR(100) AFTER bank_name");
+mysqli_query($conn, "ALTER TABLE withdrawals ADD COLUMN IF NOT EXISTS account_number VARCHAR(20) AFTER account_name");
 
 /* 5. TRANSACTIONS TABLE */
 mysqli_query($conn, "
@@ -90,7 +91,7 @@ CREATE TABLE IF NOT EXISTS transactions (
 
 echo "
   <p style='color:#4caf50; font-weight:bold; margin-top:12px;'>✅ Database Fully Synced</p>
-  <p style='font-size:11px; opacity:0.6;'>Users, Investments, Deposits, Withdrawals, and Transactions tables are ready.</p>
+  <p style='font-size:11px; opacity:0.6;'>All errors fixed. Withdrawals and Deposits are now ready.</p>
   <a href='index.php' style='display:inline-block; margin-top:15px; padding:10px 20px; background:#d4af37; color:#000; text-decoration:none; border-radius:8px; font-weight:bold;'>GO TO LOGIN</a>
 </div>
 ";
