@@ -17,19 +17,20 @@ if(isset($_POST['pay'])){
     $account_number = "5072969609";
     $account_name = "Mercy Nnena Patrick";
 
-    // ENFORCE MINIMUM DEPOSIT OF 400
     if($amt < 400) {
         $m = "❌ Minimum deposit is ₦400.";
     } else {
+        // FIXED SQL: Matches the columns we added in Step 1
         $sql = "INSERT INTO deposits 
-            (user_id, amount, sender_name, bank_name, account_number, account_name, status) 
+            (user_id, amount, bank_name, account_number, account_name, sender_name, status) 
             VALUES 
-            ('$uid', '$amt', '$sender_name', '$bank_name', '$account_number', '$account_name', 'pending')";
+            ('$uid', '$amt', '$bank_name', '$account_number', '$account_name', '$sender_name', 'pending')";
 
         if(mysqli_query($conn, $sql)){
             $m = "✅ Proof submitted! Admin will confirm within 2-24 hours.";
         } else {
-            $m = "❌ Error submitting proof. Please check your network.";
+            // This will show exactly what is wrong if it still fails
+            $m = "❌ System Error: " . mysqli_error($conn);
         }
     }
 }
@@ -43,7 +44,7 @@ if(isset($_POST['pay'])){
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
     <style>
         :root { --navy:#001f3f; --gold:#D4AF37; }
-        body { background: #f8f9fa; font-family: sans-serif; }
+        body { background: #f8f9fa; font-family: sans-serif; padding-bottom: 50px; }
         .bank-card {
             background: linear-gradient(135deg, #1a1a1a, #000);
             color: #ffc107;
@@ -51,14 +52,14 @@ if(isset($_POST['pay'])){
             border-left: 6px solid var(--gold);
             padding: 25px;
         }
+        .form-control { border-radius: 10px; padding: 12px; }
+        .btn-pay { background: var(--navy); color: white; border: none; border-radius: 10px; padding: 12px; font-weight: bold; }
         .support-box {
             background: #e7f3ff;
             border-radius: 12px;
             padding: 15px;
             border: 1px solid #b3d7ff;
         }
-        .form-control { border-radius: 10px; padding: 12px; }
-        .btn-pay { background: #007bff; border: none; border-radius: 10px; padding: 12px; font-weight: bold; }
     </style>
 </head>
 <body class="p-3">
@@ -73,12 +74,12 @@ if(isset($_POST['pay'])){
         <small class="text-white opacity-75 text-uppercase fw-bold" style="font-size: 10px; letter-spacing: 1px;">Official Payment Account</small>
         <img src="https://img.icons8.com/color/48/visa.png" width="30">
     </div>
-    <h6 class="text-white mb-1" style="font-size: 14px;">Bank: <?php echo "Moniepoint"; ?></h6>
+    <h6 class="text-white mb-1" style="font-size: 14px;">Bank: Moniepoint</h6>
     <h2 class="fw-bold mb-2" style="letter-spacing: 1.5px;">5072969609</h2>
     <h6 class="text-white opacity-75 mb-3">Name: Mercy Nnena Patrick</h6>
-    <hr style="background: rgba(255,255,255,0.2);">
-    <div class="small text-white opacity-50">
-        <i class="bi bi-info-circle-fill me-1"></i> Minimum recharge is <b>₦400</b>. Send once and provide proof below.
+    <hr style="background: rgba(255,255,255,0.1);">
+    <div class="small text-white opacity-50 text-center">
+        <i class="bi bi-info-circle-fill me-1"></i> Send once and provide proof below.
     </div>
 </div>
 
@@ -93,12 +94,10 @@ if(isset($_POST['pay'])){
         <label class="small fw-bold text-muted mb-2">Amount Sent (₦)</label>
         <input type="number" name="amt" class="form-control" placeholder="Min 400" min="400" required>
     </div>
-
     <div class="mb-4">
         <label class="small fw-bold text-muted mb-2">Sender's Account Name</label>
         <input type="text" name="sender_name" class="form-control" placeholder="Name on your bank app" required>
     </div>
-
     <button name="pay" class="btn btn-primary w-100 btn-pay shadow-sm">I HAVE TRANSFERRED</button>
 </form>
 
@@ -108,8 +107,6 @@ if(isset($_POST['pay'])){
         <i class="bi bi-whatsapp me-1"></i> Contact Support
     </a>
 </div>
-
-
 
 </body>
 </html>

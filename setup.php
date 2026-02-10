@@ -9,7 +9,7 @@ echo "
 
 mysqli_query($conn, "SET NAMES utf8mb4");
 
-/* 1. USERS TABLE (Now with Bank Columns) */
+/* 1. USERS TABLE */
 mysqli_query($conn, "
 CREATE TABLE IF NOT EXISTS users (
   id INT AUTO_INCREMENT PRIMARY KEY,
@@ -42,12 +42,15 @@ CREATE TABLE IF NOT EXISTS investments (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 ");
 
-/* 3. DEPOSITS TABLE */
+/* 3. DEPOSITS TABLE (Fixed with Bank Columns) */
 mysqli_query($conn, "
 CREATE TABLE IF NOT EXISTS deposits (
   id INT AUTO_INCREMENT PRIMARY KEY,
   user_id INT NOT NULL,
   amount DECIMAL(15,2) NOT NULL,
+  bank_name VARCHAR(100),
+  account_number VARCHAR(20),
+  account_name VARCHAR(100),
   sender_name VARCHAR(100),
   status ENUM('pending', 'approved', 'rejected') DEFAULT 'pending',
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -70,7 +73,7 @@ CREATE TABLE IF NOT EXISTS withdrawals (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 ");
 
-/* 5. TRANSACTIONS TABLE (Master Ledger) */
+/* 5. TRANSACTIONS TABLE */
 mysqli_query($conn, "
 CREATE TABLE IF NOT EXISTS transactions (
   id INT AUTO_INCREMENT PRIMARY KEY,
@@ -82,8 +85,6 @@ CREATE TABLE IF NOT EXISTS transactions (
   FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 ");
-
-
 
 echo "
   <p style='color:#4caf50; font-weight:bold; margin-top:12px;'>✅ Database Fully Synced</p>

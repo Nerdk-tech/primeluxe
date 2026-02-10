@@ -13,17 +13,21 @@ $uid = $_SESSION['user_id'];
 $level1 = mysqli_query($conn, "SELECT phone, created_at FROM users WHERE referred_by = '$uid' ORDER BY id DESC");
 $count1 = mysqli_num_rows($level1);
 
-/* Level 2 (Indirect Referrals) - Fixed the query u1.id */
+/* Level 2 (Indirect Referrals) 
+   Logic: Find users who were referred by the people YOU referred.
+*/
 $level2 = mysqli_query($conn, "
     SELECT u2.phone, u2.created_at 
-    FROM users u1 
-    JOIN users u2 ON u1.id = u2.referred_by 
+    FROM users u2 
+    JOIN users u1 ON u2.referred_by = u1.id 
     WHERE u1.referred_by = '$uid'
 ");
 $count2 = mysqli_num_rows($level2);
 
-/* Referral Link */
-$ref_link = "https://prime-luxe-lgu5.onrender.com/?ref=" . $uid;
+/* --- FIXED REFERRAL LINK --- 
+   Points to index.php which handles the auto-toggle to Register 
+*/
+$ref_link = "https://" . $_SERVER['HTTP_HOST'] . "/index.php?ref=" . $uid;
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -41,7 +45,7 @@ $ref_link = "https://prime-luxe-lgu5.onrender.com/?ref=" . $uid;
             color:white; padding:35px 15px; border-radius:0 0 30px 30px;
             text-align:center; box-shadow:0 4px 15px rgba(0,0,0,0.2);
         }
-        .stat-card { background:white; border-radius:18px; padding:20px; box-shadow:0 4px 12px rgba(0,0,0,0.05); }
+        .stat-card { background:white; border-radius:18px; padding:20px; box-shadow:0 4px 12px rgba(0,0,0,0.05); border:none; }
         .level-card {
             background:white; border-radius:18px; border-left:6px solid var(--gold);
             padding:16px; box-shadow:0 4px 12px rgba(0,0,0,0.05);
@@ -54,6 +58,7 @@ $ref_link = "https://prime-luxe-lgu5.onrender.com/?ref=" . $uid;
         .copy-btn:active { transform: scale(0.98); }
         .partner-row { padding:15px; border-bottom:1px solid #f0f0f0; }
         .partner-row:last-child { border-bottom:none; }
+        .form-control:focus { box-shadow: none; border-color: var(--gold); }
     </style>
 </head>
 <body>
@@ -68,14 +73,12 @@ $ref_link = "https://prime-luxe-lgu5.onrender.com/?ref=" . $uid;
     <div class="stat-card mb-4">
         <label class="small fw-bold text-muted mb-2 text-uppercase">Invite Link</label>
         <div class="d-flex gap-2">
-            <input type="text" id="refLink" class="form-control bg-light border-0 small" value="<?php echo $ref_link; ?>" readonly>
+            <input type="text" id="refLink" class="form-control bg-light border-0 small py-2" value="<?php echo $ref_link; ?>" readonly>
         </div>
         <button onclick="copyLink()" class="copy-btn mt-3 shadow-sm">
             <i class="bi bi-share-fill me-2"></i> COPY REFERRAL LINK
         </button>
     </div>
-
-    
 
     <div class="row g-3 mb-4">
         <div class="col-6">
@@ -133,9 +136,9 @@ $ref_link = "https://prime-luxe-lgu5.onrender.com/?ref=" . $uid;
 function copyLink(){
     const el = document.getElementById('refLink');
     el.select();
-    el.setSelectionRange(0, 99999); // For mobile
+    el.setSelectionRange(0, 99999); // Compatibility for mobile
     navigator.clipboard.writeText(el.value).then(()=>{
-        alert("✅ Referral link copied to clipboard!");
+        alert("✅ Link copied! Share with your Friends.");
     });
 }
 </script>
