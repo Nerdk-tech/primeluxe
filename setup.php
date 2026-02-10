@@ -42,7 +42,7 @@ CREATE TABLE IF NOT EXISTS investments (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 ");
 
-/* 3. DEPOSITS TABLE (Fixed with Bank Columns) */
+/* 3. DEPOSITS TABLE - FIXED: Added ALTER TABLE to force update existing table */
 mysqli_query($conn, "
 CREATE TABLE IF NOT EXISTS deposits (
   id INT AUTO_INCREMENT PRIMARY KEY,
@@ -57,6 +57,11 @@ CREATE TABLE IF NOT EXISTS deposits (
   FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 ");
+
+// These 3 lines fix the "Unknown column" error if the table already existed
+mysqli_query($conn, "ALTER TABLE deposits ADD COLUMN IF NOT EXISTS bank_name VARCHAR(100) AFTER amount");
+mysqli_query($conn, "ALTER TABLE deposits ADD COLUMN IF NOT EXISTS account_number VARCHAR(20) AFTER bank_name");
+mysqli_query($conn, "ALTER TABLE deposits ADD COLUMN IF NOT EXISTS account_name VARCHAR(100) AFTER account_number");
 
 /* 4. WITHDRAWALS TABLE */
 mysqli_query($conn, "
