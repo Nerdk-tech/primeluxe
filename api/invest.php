@@ -1,6 +1,6 @@
 <?php
 include 'db.php';
-include 'functions.php'; // Contains getPlanData() and processTeamCommissions()
+include 'functions.php'; 
 session_start();
 
 if(!isset($_SESSION['user_id'])) {
@@ -12,54 +12,61 @@ if(isset($_POST['invest'])) {
     $user_id = $_SESSION['user_id'];
     $vip_level = (int)$_POST['vip_level'];
     
-    // Fetch plan details from your function
-    $plan = getPlanData($vip_level);
-    if(!$plan) {
-        header("Location: ../dashboard.php?error=Invalid Plan Selected");
+    // 1. STOPS THE "3 VIPS" PROBLEM:
+    // Check if user already has this VIP ACTIVE. 
+    // If they already have it, don't add another one!
+    $already_has = mysqli_query($conn, "SELECT id FROM investments 
+                                        WHERE user_id = '$user_id' 
+                                        AND vip_level = '$vip_level' 
+                                        AND status = 'active'");
+    
+    if(mysqli_num_rows($already_has) > 0) {
+        header("Location: ../dashboard.php?error=You already have an active VIP $vip_level plan.");
         exit();
     }
 
-    // Fixed prices based on VIP level (prevents users from editing the 'amount' in the browser)
-    $vip_prices = [1 => 3000, 2 => 23000, 3 => 53000, 4 => 83000, 5 => 113000];
-    $amount = $vip_prices[$vip_level];
+    // 2. SYNCED PLAN DATA (Matches your daily_cron.php steps)
+    $plans = [
+        1 => ['price' => 3000,   'daily' => 4250, 'steps' => 4],
+        2 => ['price' => 23000,  'daily' => 6750, 'steps' => 4],
+        3 => ['price' => 53000,  'daily' => 5400, 'steps' => 5], // 58400 - 53000 = 5400
+        4 => ['price' => 83000,  'daily' => 5400, 'steps' => 5],
+        5 => ['price' => 113000, 'daily' => 7400, 'steps' => 5]
+    ];
 
-    // Start Transaction for data safety
+    if(!isset($plans[$vip_level])) {
+        header("Location: ../dashboard.php?error=Invalid Plan.");
+        exit();
+    }
+
+    $amount = $plans[$vip_level]['price'];
+    $daily  = $plans[$vip_level]['daily'];
+    $steps  = $plans[$vip_level]['steps'];
+
     mysqli_begin_transaction($conn);
-
     try {
-        // 1. Check balance and LOCK the row (FOR UPDATE) to prevent double-click hacks
-        $check = mysqli_query($conn, "SELECT balance FROM users WHERE id = '$user_id' FOR UPDATE");
-        $user = mysqli_fetch_assoc($check);
+        $user_check = mysqli_query($conn, "SELECT balance FROM users WHERE id = '$user_id' FOR UPDATE");
+        $user = mysqli_fetch_assoc($user_check);
         
-        if($user['balance'] < $amount) {
-            throw new Exception("Insufficient Balance");
-        }
+        if($user['balance'] < $amount) { throw new Exception("Insufficient Balance"); }
 
-        // 2. Deduct money
+        // Deduct Balance
         mysqli_query($conn, "UPDATE users SET balance = balance - $amount WHERE id = '$user_id'");
         
-        // 3. Log the debit in transaction history
+        // Log Transaction
         mysqli_query($conn, "INSERT INTO transactions (user_id, amount, type, description) 
                              VALUES ('$user_id', '$amount', 'debit', 'Purchased VIP $vip_level')");
 
-        // 4. Start the investment (Using current_step logic for your 24hr cron)
-        $sql = "INSERT INTO investments (user_id, amount, vip_level, current_step, status, last_growth) 
-                VALUES ('$user_id', '$amount', '$vip_level', 0, 'active', NOW())";
+        // Create Investment
+        $sql = "INSERT INTO investments (user_id, amount_invested, daily_income, vip_level, current_step, max_steps, status, last_growth) 
+                VALUES ('$user_id', '$amount', '$daily', '$vip_level', 0, '$steps', 'active', NOW())";
         mysqli_query($conn, $sql);
 
-        // 5. PAY THE UPLINES (Referral Commissions)
-        // This calls the function we just built!
-        processTeamCommissions($user_id, $amount, $vip_level, $conn);
-
-        // If everything is perfect, save to database
         mysqli_commit($conn);
-        header("Location: ../dashboard.php?msg=VIP $vip_level Activated Successfully!");
-
+        echo "<script>alert('✅ VIP $vip_level Activated! Check growth in Orders.'); window.location.href='../orders.php';</script>";
     } catch (Exception $e) {
-        // If anything fails, undo everything (refund the user)
         mysqli_rollback($conn);
-        $error_msg = $e->getMessage();
-        header("Location: ../dashboard.php?error=$error_msg");
+        header("Location: ../dashboard.php?error=".$e->getMessage());
     }
 }
 ?>

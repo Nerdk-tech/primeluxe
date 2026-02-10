@@ -1,9 +1,13 @@
 <?php
 include 'db.php';
 
-/* Ella's 24-Hour Growth Steps 
-  Instead of adding a flat 200, we move them to the next milestone.
-*/
+// --- SECURITY LOCK ---
+$key = "ella_prime_99"; 
+if (!isset($_GET['key']) || $_GET['key'] !== $key) {
+    die("❌ Error: Unauthorized access.");
+}
+// ---------------------
+
 $vip_steps = [
     1 => [7250, 11500, 15750, 20000],
     2 => [29750, 36500, 43250, 50000],
@@ -12,11 +16,9 @@ $vip_steps = [
     5 => [120400, 127800, 135200, 142600, 150000]
 ];
 
-// 1. Only pick users who haven't been paid in the last 24 hours
+// Logic: Check if 24 hours have passed since last growth
 $sql = "SELECT * FROM investments WHERE status = 'active' AND last_growth <= NOW() - INTERVAL 24 HOUR";
 $result = mysqli_query($conn, $sql);
-
-
 
 while($inv = mysqli_fetch_assoc($result)) {
     $inv_id = $inv['id'];
@@ -24,22 +26,19 @@ while($inv = mysqli_fetch_assoc($result)) {
     $vip   = $inv['vip_level'];
     $step  = $inv['current_step']; 
     
-    // Check if there is a next step available for this VIP level
     if (isset($vip_steps[$vip][$step])) {
-        $new_total = $vip_steps[$vip][$step];
-        
+        $target_total = $vip_steps[$vip][$step];
+        $prev_total = ($step == 0) ? $inv['amount_invested'] : $vip_steps[$vip][$step - 1];
+        $profit_to_add = $target_total - $prev_total;
+
         mysqli_begin_transaction($conn);
         try {
-            // A. Update the User's Main Balance
-            // Note: This replaces their balance with the new 'Step' amount
-            mysqli_query($conn, "UPDATE users SET balance = $new_total WHERE id = $uid");
+            mysqli_query($conn, "UPDATE users SET balance = balance + $profit_to_add WHERE id = $uid");
             
-            // B. Log this in the earnings table so the user sees it in their history
             $msg = "VIP $vip Daily Growth (Day " . ($step + 1) . ")";
             mysqli_query($conn, "INSERT INTO transactions (user_id, amount, type, description) 
-                                 VALUES ($uid, $new_total, 'credit', '$msg')");
+                                 VALUES ($uid, $profit_to_add, 'credit', '$msg')");
             
-            // C. Move to the next step and update the time
             $next_step = $step + 1;
             $status = ($next_step >= count($vip_steps[$vip])) ? 'completed' : 'active';
             
@@ -50,10 +49,9 @@ while($inv = mysqli_fetch_assoc($result)) {
                 WHERE id = $inv_id");
                 
             mysqli_commit($conn);
-            echo "✅ Processed: User $uid (VIP $vip) moved to Day $next_step.<br>";
+            echo "✅ Day ".($step+1)." processed for User $uid.<br>";
         } catch (Exception $e) {
             mysqli_rollback($conn);
-            echo "❌ Failed: User $uid - " . $e->getMessage() . "<br>";
         }
     }
 }
