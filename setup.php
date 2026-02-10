@@ -42,15 +42,12 @@ CREATE TABLE IF NOT EXISTS investments (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 ");
 
-/* 3. DEPOSITS TABLE - FIXED: Added ALTER TABLE to force update existing table */
+/* 3. DEPOSITS TABLE */
 mysqli_query($conn, "
 CREATE TABLE IF NOT EXISTS deposits (
   id INT AUTO_INCREMENT PRIMARY KEY,
   user_id INT NOT NULL,
   amount DECIMAL(15,2) NOT NULL,
-  bank_name VARCHAR(100),
-  account_number VARCHAR(20),
-  account_name VARCHAR(100),
   sender_name VARCHAR(100),
   status ENUM('pending', 'approved', 'rejected') DEFAULT 'pending',
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -58,10 +55,10 @@ CREATE TABLE IF NOT EXISTS deposits (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 ");
 
-// These 3 lines fix the "Unknown column" error if the table already existed
-mysqli_query($conn, "ALTER TABLE deposits ADD COLUMN IF NOT EXISTS bank_name VARCHAR(100) AFTER amount");
-mysqli_query($conn, "ALTER TABLE deposits ADD COLUMN IF NOT EXISTS account_number VARCHAR(20) AFTER bank_name");
-mysqli_query($conn, "ALTER TABLE deposits ADD COLUMN IF NOT EXISTS account_name VARCHAR(100) AFTER account_number");
+/* FIX: Adding missing columns to Deposits table individually to avoid syntax errors */
+mysqli_query($conn, "ALTER TABLE deposits ADD COLUMN bank_name VARCHAR(100) AFTER amount");
+mysqli_query($conn, "ALTER TABLE deposits ADD COLUMN account_number VARCHAR(20) AFTER bank_name");
+mysqli_query($conn, "ALTER TABLE deposits ADD COLUMN account_name VARCHAR(100) AFTER account_number");
 
 /* 4. WITHDRAWALS TABLE */
 mysqli_query($conn, "
