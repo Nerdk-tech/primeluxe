@@ -9,6 +9,17 @@ echo "
 
 mysqli_query($conn, "SET NAMES utf8mb4");
 
+/**
+ * Safety function to add columns only if they don't exist
+ * This prevents the 'SQL Syntax' error on Render/MySQL
+ */
+function addColumnSafe($conn, $table, $column, $definition) {
+    $check = mysqli_query($conn, "SHOW COLUMNS FROM `$table` LIKE '$column'");
+    if (mysqli_num_rows($check) == 0) {
+        mysqli_query($conn, "ALTER TABLE `$table` ADD `$column` $definition");
+    }
+}
+
 /* 1. USERS TABLE */
 mysqli_query($conn, "
 CREATE TABLE IF NOT EXISTS users (
@@ -67,15 +78,6 @@ CREATE TABLE IF NOT EXISTS withdrawals (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 ");
 
-/* FORCE UPDATE: This part fixes the 'Unknown Column' error shown in your screenshot */
-mysqli_query($conn, "ALTER TABLE deposits ADD COLUMN IF NOT EXISTS bank_name VARCHAR(100) AFTER amount");
-mysqli_query($conn, "ALTER TABLE deposits ADD COLUMN IF NOT EXISTS account_number VARCHAR(20) AFTER bank_name");
-mysqli_query($conn, "ALTER TABLE deposits ADD COLUMN IF NOT EXISTS account_name VARCHAR(100) AFTER account_number");
-
-mysqli_query($conn, "ALTER TABLE withdrawals ADD COLUMN IF NOT EXISTS bank_name VARCHAR(100) AFTER amount");
-mysqli_query($conn, "ALTER TABLE withdrawals ADD COLUMN IF NOT EXISTS account_name VARCHAR(100) AFTER bank_name");
-mysqli_query($conn, "ALTER TABLE withdrawals ADD COLUMN IF NOT EXISTS account_number VARCHAR(20) AFTER account_name");
-
 /* 5. TRANSACTIONS TABLE */
 mysqli_query($conn, "
 CREATE TABLE IF NOT EXISTS transactions (
@@ -88,6 +90,19 @@ CREATE TABLE IF NOT EXISTS transactions (
   FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 ");
+
+/* --- COLUMN REPAIRS (The Fix for your Error) --- */
+addColumnSafe($conn, 'deposits', 'bank_name', "VARCHAR(100) AFTER amount");
+addColumnSafe($conn, 'deposits', 'account_number', "VARCHAR(20) AFTER bank_name");
+addColumnSafe($conn, 'deposits', 'account_name', "VARCHAR(100) AFTER account_number");
+
+addColumnSafe($conn, 'withdrawals', 'bank_name', "VARCHAR(100) AFTER amount");
+addColumnSafe($conn, 'withdrawals', 'account_name', "VARCHAR(100) AFTER bank_name");
+addColumnSafe($conn, 'withdrawals', 'account_number', "VARCHAR(20) AFTER account_name");
+
+/* --- CLEANUP: Fix any '0/0 Days' already in the database --- */
+mysqli_query($conn, "UPDATE investments SET max_steps = 4 WHERE vip_level IN (1,2) AND max_steps = 0");
+mysqli_query($conn, "UPDATE investments SET max_steps = 5 WHERE vip_level IN (3,4,5) AND max_steps = 0");
 
 echo "
   <p style='color:#4caf50; font-weight:bold; margin-top:12px;'>✅ Database Fully Synced</p>
